@@ -1,0 +1,40 @@
+name: Build and Release esp-idf
+
+on:
+  workflow_dispatch: # 触发方式，手动触发
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout esp-idf repo with submodules
+      uses: actions/checkout@v4
+      with:
+        repository: espressif/esp-idf
+        ref: customer/11kv_v4.0_xiaomi
+        submodules: recursive
+        fetch-depth: 0 # 拉完整历史方便切commit
+
+    - name: Checkout specific commit
+      run: git checkout 7cf987028e983f6432512e4399fe57d0ff8a9847
+
+    - name: Zip the source code
+      run: |
+        zip -r esp-idf-customer-11kv_v4.0_xiaomi-full.zip . -x ".git/*" -x ".github/*" 
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: esp-idf-full-v1
+        name: esp-idf customer/11kv_v4.0_xiaomi full source
+        body: "Full esp-idf source including all submodules at commit 7cf9870"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: esp-idf-customer-11kv_v4.0_xiaomi-full.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
